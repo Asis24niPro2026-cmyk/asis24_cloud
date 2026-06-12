@@ -1,0 +1,1 @@
+ALTER TABLE `orders` MODIFY COLUMN `business` enum('Comidería','Papelería','Ropa','Celulares','Masajes','Uñas Acrílicas','Otros') NOT NULL;
