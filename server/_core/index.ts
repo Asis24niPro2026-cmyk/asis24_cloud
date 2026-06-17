@@ -45,6 +45,25 @@ async function startServer() {
     })
   );
   // development mode uses Vite, production mode uses static files
+  // RUTAS API - VAN ANTES DEL STATIC
+    app.get('/', (req, res) => {
+      res.json({ status: 'API funcionando en Render' });
+    });
+
+
+
+ 
+app.get('/', (req, res) => {
+  res.json({ status: 'API funcionando' });
+});
+
+app.get('/api/pedidos', (req, res) => {
+  res.json([]);
+});    
+
+   
+    
+   
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
   } else {
