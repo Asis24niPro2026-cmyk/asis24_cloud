@@ -1,23 +1,21 @@
-import express from 'express';
-import * as trpcExpress from '@trpc/server/adapters/express';
-import { appRouter } from './routers';
-import cors from 'cors';
+import express from 'express'
+import * as trpcExpress from '@trpc/server/adapters/express'
+import { appRouter } from './routers'
+import cors from 'cors'
 
-const app = express();
-
-app.use(cors());
-app.use(express.json());
+const app = express()
+app.use(cors())
+app.use(express.json())
 
 app.get('/', (req, res) => {
-  res.json({ status: 'API funcionando en Render' });
-});
+  res.json({ status: 'ok' })
+})
 
 app.use('/trpc', trpcExpress.createExpressMiddleware({
   router: appRouter,
-  createContext: ({ req, res }) => ({ req, res, user: null }),
-}));
+}))
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3000
 app.listen(port, () => {
-  console.log(`Server running on ${port}`);
-});
+  console.log(`Server running on ${port}`)
+})
