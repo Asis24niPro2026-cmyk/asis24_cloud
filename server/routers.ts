@@ -1,16 +1,14 @@
-import { router, publicProcedure } from "@trpc/server";
-import { z } from "zod";
+import { initTRPC } from '@trpc/server';
+import { z } from 'zod';
 
-export const appRouter = router({
-  health: publicProcedure.query(() => {
-    return { ok: true, timestamp: new Date().toISOString() };
-  }),
-  
-  echo: publicProcedure
-    .input(z.object({ text: z.string() }))
-    .mutation(({ input }) => {
-      return { echo: input.text };
-    })
+const t = initTRPC.create();
+
+export const appRouter = t.router({
+  hello: t.procedure
+    .input(z.string().nullish())
+    .query(({ input }) => {
+      return `Hola ${input ?? 'mundo'} desde tRPC!`;
+    }),
 });
 
 export type AppRouter = typeof appRouter;
