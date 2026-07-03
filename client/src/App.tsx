@@ -1,36 +1,15 @@
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
-import ErrorBoundary from "./components/ErrorBoundary";
-import { ThemeProvider } from "./contexts/ThemeContext";
-import OrderForm from "./pages/OrderForm";
-import AdminPanel from "./pages/AdminPanel";
-
-function Router() {
-  return (
-    <Switch>
-      <Route path="/" component={OrderForm} />
-      <Route path="/admin" component={AdminPanel} />
-      <Route path="/404" component={NotFound} />
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
+import { Hello } from "./components/Hello";
 
 function App() {
   return (
-    <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-      >
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </ThemeProvider>
-    </ErrorBoundary>
+    <div>
+      <h1>Mi App de Pedidos</h1>
+      <Hello />
+    </div>
   );
 }
 
 export default App;
+
+
+
