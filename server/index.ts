@@ -13,7 +13,7 @@ app.get("/", (req, res) => {
 });
 
 app.use(
-  "/trpc",
+  "/api/trpc",
   trpcExpress.createExpressMiddleware({
     router: appRouter,
   })
