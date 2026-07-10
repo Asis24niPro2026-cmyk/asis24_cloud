@@ -16,7 +16,8 @@ export default defineConfig({
     outDir: 'dist'
   },
    preview: {
-    port: 4173,
+   host: '0.0.0.0',  
+    port: process.env.PORT || 4173,
     allowedHosts: ["asis24-cloud-1.onrender.com"]
   }
 })
