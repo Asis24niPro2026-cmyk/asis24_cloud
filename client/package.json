@@ -23,7 +23,8 @@
     "@trpc/react-query": "^11.17.0",
     "react-router-dom": "^6.23.0",
     "lucide-react": "^0.452.0",
-    "streamdown": "latest"
+    "streamdown": "latest",
+    "@radix-ui/react-slot": "^1.0.2"
   },
   "devDependencies": {
     "typescript": "^5.2.2"
