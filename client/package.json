@@ -21,8 +21,9 @@
     "@vitejs/plugin-react": "^4.2.1",
     "@trpc/client": "^11.17.0",
     "react-router-dom": "^6.23.0",
-    "lucide-react": "^0.452.0"
-  },
+    "lucide-react": "^0.452.0",
+    "streamdown": "latest"
+  }
   "devDependencies": {
     "typescript": "^5.2.2"
   }
