@@ -26,7 +26,8 @@
     "streamdown": "latest",
     "@radix-ui/react-slot": "^1.0.2",
     "class-variance-authority": "^0.7.0",
-    "@radix-ui/react-select": "^1.0.0"
+    "@radix-ui/react-select": "^1.0.0",
+    "@radix-ui/react-dialog": "^1.0.0"
   },
   "devDependencies": {
     "typescript": "^5.2.2"
