@@ -5,7 +5,13 @@ import { appRouter } from "./routers";
 
 const app = express();
 
-app.use(cors());
+// ✅ Configuración de CORS específica para tu frontend en Render
+app.use(cors({
+  origin: "https://asis24-cloud-1.onrender.com", // dominio del frontend
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
+
 app.use(express.json());
 
 // Ruta raíz para verificar que el servidor está vivo
