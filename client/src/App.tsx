@@ -1,19 +1,26 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
-import BusinessProfile from "./pages/BusinessProfile";
-import RegisterBusiness from "./pages/RegisterBusiness";
-import AdminPanel from "./pages/AdminPanel";
+import { useEffect, useState } from "react";
+import { getOrders } from "./api";
 
 function App() {
+  const [orders, setOrders] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    getOrders()
+      .then(data => setOrders(data))
+      .catch(err => setError(err.message));
+  }, []);
+
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/negocio/:id" element={<BusinessProfile />} />
-        <Route path="/registrar" element={<RegisterBusiness />} />
-        <Route path="/admin/:id" element={<AdminPanel />} />
-      </Routes>
-    </BrowserRouter>
+    <div>
+      <h1>Pedidos</h1>
+      {error && <p style={{color:"red"}}>{error}</p>}
+      <ul>
+        {orders.map(o => (
+          <li key={o.id}>{o.customer} - {o.product} ({o.status})</li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
