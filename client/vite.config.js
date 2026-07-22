@@ -1,23 +1,14 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { fileURLToPath, URL } from 'node:url'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-  base:'/' ,
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
-      'a': fileURLToPath(new URL('./src', import.meta.url)),
-      '@shared': fileURLToPath(new URL('../shared', import.meta.url)),
-    },
-  },
-  build: {
-    outDir: 'dist'
+  server: {
+    port: 5173, // opcional, si quieres fijar el puerto en local
   },
   preview: {
-    host: '0.0.0.0',
-    port: process.env.PORT || 4173,
-    allowedHosts: ["asis24-cloud-1.onrender.com"]
+    allowedHosts: [
+      "asis24-cloud-1.onrender.com" // tu backend en Render
+    ]
   }
-})
+});
