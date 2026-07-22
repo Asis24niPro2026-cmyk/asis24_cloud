@@ -7,7 +7,7 @@ const app = express();
 
 // ✅ Configuración de CORS específica para tu frontend en Render
 app.use(cors({
-  origin: "https://asis24-cloud-1.onrender.com", // dominio del frontend
+  origin: "https://asis24-client.onrender.com", // dominio del frontend
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
