@@ -6,22 +6,17 @@ import { appRouter } from "./routers";
 const app = express();
 
 // ✅ Configuración CORS
-app.use(cors({
+const corsOptions = {
   origin: "https://asis24-client.onrender.com", // dominio del frontend
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // incluye OPTIONS
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
-}));
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // 👈 Manejo explícito de preflight
 
 app.use(express.json());
-
-// 🔧 Manejo explícito de preflight (OPTIONS)
-app.options("*", cors({
-  origin: "https://asis24-client.onrender.com",
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
-}));
 
 // Ruta raíz
 app.get("/", (req, res) => {
