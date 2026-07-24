@@ -5,9 +5,9 @@ import { appRouter } from "./routers";
 
 const app = express();
 
-// 🔧 Configuración CORS
+// ✅ Configuración CORS para Render
 app.use(cors({
-  origin: "https://asis24-client.onrender.com", // dominio del frontend en Render
+  origin: "https://asis24-client.onrender.com", // dominio del frontend
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"], // cabeceras permitidas
   credentials: true
@@ -28,15 +28,13 @@ app.use(
   })
 );
 
-// ✅ Rutas de pedidos
+// Rutas de pedidos
 app.get("/api/orders", async (req, res) => {
-  // Ejemplo simple: devolver un array vacío
   res.json([]);
 });
 
 app.post("/api/orders", async (req, res) => {
   const { customer, product, status } = req.body;
-  // Ejemplo simple: devolver el objeto recibido con un id simulado
   res.json({ id: Date.now(), customer, product, status });
 });
 
