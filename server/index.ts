@@ -5,17 +5,17 @@ import { appRouter } from "./routers";
 
 const app = express();
 
-// ✅ Configuración CORS para Render
+// ✅ Configuración CORS correcta
 app.use(cors({
   origin: "https://asis24-client.onrender.com", // dominio del frontend
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"], // cabeceras permitidas
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // incluye OPTIONS para preflight
+  allowedHeaders: ["Content-Type", "Authorization"],    // cabeceras permitidas
   credentials: true
 }));
 
 app.use(express.json());
 
-// Ruta raíz para verificar que el servidor está vivo
+// Ruta raíz
 app.get("/", (req, res) => {
   res.json({ status: "ok" });
 });
