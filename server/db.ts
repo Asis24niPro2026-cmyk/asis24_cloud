@@ -1,5 +1,6 @@
-import { desc, eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { and, desc, eq } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/neon-http";
+import { neon } from "@neondatabase/serverless";
 import { InsertUser, users, orders, InsertOrder } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -9,7 +10,8 @@ let _db: ReturnType<typeof drizzle> | null = null;
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      const sql = neon(process.env.DATABASE_URL);
+      _db = drizzle(sql);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -68,7 +70,9 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.lastSignedIn = new Date();
     }
 
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
+    // 👇 en Postgres/Neon se usa onConflictDoUpdate en vez de onDuplicateKeyUpdate
+    await db.insert(users).values(values).onConflictDoUpdate({
+      target: users.openId,
       set: updateSet,
     });
   } catch (error) {
@@ -100,15 +104,19 @@ export async function getOrders(filters?: { business?: string; status?: string }
   }
 
   try {
-    let query = db.select().from(orders) as any;
+    const conditions = [];
 
     if (filters?.business && filters.business !== "all") {
-      query = query.where(eq(orders.business, filters.business as any));
+      conditions.push(eq(orders.business, filters.business as any));
     }
 
     if (filters?.status && filters.status !== "all") {
-      query = query.where(eq(orders.status, filters.status as any));
+      conditions.push(eq(orders.status, filters.status as any));
     }
+
+    const query = conditions.length > 0
+      ? db.select().from(orders).where(and(...conditions))
+      : db.select().from(orders);
 
     const result = await query.orderBy(desc(orders.createdAt));
     return result;
@@ -129,7 +137,7 @@ export async function createOrder(order: InsertOrder) {
   }
 
   try {
-    const result = await db.insert(orders).values(order);
+    const result = await db.insert(orders).values(order).returning();
     return result;
   } catch (error) {
     console.error("[Database] Failed to create order:", error);
@@ -151,7 +159,8 @@ export async function updateOrderStatus(orderId: number, status: string) {
     const result = await db
       .update(orders)
       .set({ status: status as any })
-      .where(eq(orders.id, orderId));
+      .where(eq(orders.id, orderId))
+      .returning();
     return result;
   } catch (error) {
     console.error("[Database] Failed to update order:", error);
@@ -170,7 +179,7 @@ export async function deleteOrder(orderId: number) {
   }
 
   try {
-    const result = await db.delete(orders).where(eq(orders.id, orderId));
+    const result = await db.delete(orders).where(eq(orders.id, orderId)).returning();
     return result;
   } catch (error) {
     console.error("[Database] Failed to delete order:", error);
