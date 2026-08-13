@@ -43,17 +43,6 @@ app.use(
     router: appRouter,
   })
 );
-
-// Rutas de pedidos
-app.get("/api/orders", async (req, res) => {
-  res.json([]);
-});
-
-app.post("/api/orders", async (req, res) => {
-  const { customer, product, status } = req.body;
-  res.json({ id: Date.now(), customer, product, status });
-});
-
 // 🚀 Inicializar servidor
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
