@@ -15,7 +15,7 @@ const queryClient = new QueryClient();
 const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
-      url: "https://asis24-cloud-1.onrender.com/trpc", // ajusta la URL si tu backend expone otra ruta
+      url: `${import.meta.env.VITE_API_URL || "https://asis24-cloud-1.onrender.com"}/api/trpc`, // ajusta la URL si tu backend expone otra ruta
     }),
   ],
 });
