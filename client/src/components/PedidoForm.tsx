@@ -1,69 +1,134 @@
 import { useState } from "react";
+import { trpc } from "../lib/trpc";
+
+const BUSINESS_OPTIONS = [
+  "Comidería",
+  "Papelería",
+  "Ropa",
+  "Celulares",
+  "Masajes",
+  "Uñas Acrílicas",
+  "Variedades",
+  "Examen/Laboratorio",
+  "Otros",
+] as const;
+
+const DELIVERY_OPTIONS = ["Local", "Delivery"] as const;
 
 export default function PedidoForm() {
-  const [nombre, setNombre] = useState("");
-  const [producto, setProducto] = useState("");
-  const [cantidad, setCantidad] = useState(1);
+  const [clientName, setClientName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [business, setBusiness] = useState<(typeof BUSINESS_OPTIONS)[number]>(BUSINESS_OPTIONS[0]);
+  const [details, setDetails] = useState("");
+  const [deliveryType, setDeliveryType] = useState<(typeof DELIVERY_OPTIONS)[number]>("Local");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
 
-  const crearPedido = async (e: React.FormEvent) => {
+  const crearPedido = trpc.orders.create.useMutation({
+    onSuccess: () => {
+      setClientName("");
+      setPhone("");
+      setBusiness(BUSINESS_OPTIONS[0]);
+      setDetails("");
+      setDeliveryType("Local");
+      setDeliveryAddress("");
+      alert("Pedido creado con éxito ✅");
+    },
+    onError: (err) => {
+      alert("Error al crear el pedido: " + err.message);
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const pedido = {
-      cliente: nombre,
-      producto,
-      cantidad,
-      estado: "pendiente",
-    };
-
-    await fetch(`${import.meta.env.VITE_API_URL}/api/orders`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(pedido),
+    crearPedido.mutate({
+      clientName,
+      phone,
+      business,
+      details,
+      deliveryType,
+      deliveryAddress: deliveryType === "Delivery" ? deliveryAddress : "",
     });
-
-    // Limpia el formulario después de enviar
-    setNombre("");
-    setProducto("");
-    setCantidad(1);
-    alert("Pedido creado con éxito ✅");
   };
 
   return (
-    <form onSubmit={crearPedido} style={{ marginTop: "20px" }}>
+    <form onSubmit={handleSubmit} style={{ marginTop: "20px" }}>
       <h2>Crear nuevo pedido</h2>
 
       <div>
         <label>Nombre del cliente:</label>
         <input
           type="text"
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
+          value={clientName}
+          onChange={(e) => setClientName(e.target.value)}
           required
         />
       </div>
 
       <div>
-        <label>Producto/Servicio:</label>
+        <label>Teléfono:</label>
         <input
-          type="text"
-          value={producto}
-          onChange={(e) => setProducto(e.target.value)}
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
           required
         />
       </div>
 
       <div>
-        <label>Cantidad:</label>
-        <input
-          type="number"
-          value={cantidad}
-          onChange={(e) => setCantidad(Number(e.target.value))}
-          min="1"
+        <label>Negocio:</label>
+        <select
+          value={business}
+          onChange={(e) => setBusiness(e.target.value as typeof business)}
+          required
+        >
+          {BUSINESS_OPTIONS.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label>Detalles del pedido:</label>
+        <textarea
+          value={details}
+          onChange={(e) => setDetails(e.target.value)}
           required
         />
       </div>
 
-      <button type="submit">Enviar pedido</button>
+      <div>
+        <label>Tipo de entrega:</label>
+        <select
+          value={deliveryType}
+          onChange={(e) => setDeliveryType(e.target.value as typeof deliveryType)}
+          required
+        >
+          {DELIVERY_OPTIONS.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {deliveryType === "Delivery" && (
+        <div>
+          <label>Dirección de entrega:</label>
+          <input
+            type="text"
+            value={deliveryAddress}
+            onChange={(e) => setDeliveryAddress(e.target.value)}
+            required
+          />
+        </div>
+      )}
+
+      <button type="submit" disabled={crearPedido.isPending}>
+        {crearPedido.isPending ? "Enviando..." : "Enviar pedido"}
+      </button>
     </form>
   );
 }
