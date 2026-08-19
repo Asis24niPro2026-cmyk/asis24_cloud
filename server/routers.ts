@@ -40,8 +40,16 @@ export const appRouter = t.router({
           business: z.enum(businessValues),
           details: z.string().min(1),
           deliveryType: z.enum(deliveryTypeValues),
-          deliveryAddress: z.string().min(1),
-        })
+          deliveryAddress: z.string().optional(),
+        }).refine(
+          (data) =>
+            data.deliveryType !== "Delivery" ||
+            (data.deliveryAddress && data.deliveryAddress.trim().length > 0),
+          {
+            message: "La dirección es obligatoria cuando el tipo de entrega es Delivery",
+            path: ["deliveryAddress"],
+          }
+        )
       )
       .mutation(async ({ input }) => {
         return await createOrder(input);

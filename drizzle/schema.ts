@@ -27,7 +27,7 @@ export const orders = pgTable("orders", {
   business: businessEnum("business").notNull(),
   details: text("details").notNull(),
   deliveryType: deliveryTypeEnum("deliveryType").notNull(),
-  deliveryAddress: varchar("deliveryAddress", { length: 500 }).notNull(),
+  deliveryAddress: varchar("deliveryAddress", { length: 500 }),
   status: statusEnum("status").default("Pendiente").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
