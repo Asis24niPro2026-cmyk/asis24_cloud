@@ -72,7 +72,7 @@ export async function setAdminCredentials(username: string, password: string): P
   const db = await getDb();
   if (!db) {
     console.warn("[Auth] Cannot set credentials: database not available");
-    return;
+    throw new Error("Database not available (check DATABASE_URL)");
   }
 
   try {

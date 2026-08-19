@@ -1,6 +1,7 @@
-import { initTRPC } from '@trpc/server';
+import { initTRPC, TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { getOrders, createOrder, updateOrderStatus, deleteOrder } from './db';
+import { authenticateAdmin } from './auth-admin';
 
 const t = initTRPC.create();
 
@@ -14,6 +15,30 @@ const deliveryTypeValues = ["Local", "Delivery"] as const;
 const statusValues = ["Pendiente", "Enviado al negocio", "Entregado"] as const;
 
 export const appRouter = t.router({
+  admin: t.router({
+    login: t.procedure
+      .input(
+        z.object({
+          username: z.string().min(1),
+          password: z.string().min(1),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const isValid = await authenticateAdmin(input.username, input.password);
+        if (!isValid) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Usuario o contraseña incorrectos",
+          });
+        }
+        return { success: true };
+      }),
+
+    logout: t.procedure.mutation(async () => {
+      return { success: true };
+    }),
+  }),
+
   hello: t.procedure
     .input(z.string().nullish())
     .query(({ input }) => {

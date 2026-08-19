@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import "dotenv/config";
 import { setAdminCredentials } from "../server/auth-admin.ts";
 import process from "process";
 
