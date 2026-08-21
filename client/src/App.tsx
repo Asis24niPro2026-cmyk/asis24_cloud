@@ -6,15 +6,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route
-          path="/"
-          element={
-            <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
-              <h1>Pedidos</h1>
-              <PedidoForm />
-            </div>
-          }
-        />
+        <Route path="/" element={<PedidoForm />} />
         <Route path="/admin" element={<AdminPanel />} />
       </Routes>
     </BrowserRouter>
