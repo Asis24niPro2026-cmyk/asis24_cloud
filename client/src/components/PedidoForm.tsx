@@ -113,7 +113,7 @@ export default function PedidoForm() {
               <div>
                 <Label className="text-sm font-semibold text-cyan-300 mb-2">Negocio</Label>
                 <Select value={business} onValueChange={(v) => setBusiness(v as typeof business)}>
-                  <SelectTrigger className="bg-slate-700/50 border-cyan-500/30 text-slate-200 font-normal mt-2 w-full">
+                  <SelectTrigger className="bg-slate-700/50 border-cyan-500/30 text-slate-100 font-medium mt-2 w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-slate-800 border-cyan-500/30">
@@ -140,7 +140,7 @@ export default function PedidoForm() {
               <div>
                 <Label className="text-sm font-semibold text-cyan-300 mb-2">Tipo de entrega</Label>
                 <Select value={deliveryType} onValueChange={(v) => setDeliveryType(v as typeof deliveryType)}>
-                  <SelectTrigger className="bg-slate-700/50 border-cyan-500/30 text-slate-200 font-normal mt-2 w-full">
+                  <SelectTrigger className="bg-slate-700/50 border-cyan-500/30 text-slate-100 font-medium mt-2 w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-slate-800 border-cyan-500/30">

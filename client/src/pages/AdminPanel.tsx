@@ -177,7 +177,7 @@ export default function AdminPanel() {
           <div>
             <label className="block text-sm font-semibold text-cyan-300 mb-2">Filtrar por Negocio</label>
             <Select value={filterBusiness} onValueChange={setFilterBusiness}>
-              <SelectTrigger className="bg-slate-800 border-cyan-500/30 text-slate-200 font-normal">
+              <SelectTrigger className="bg-slate-800 border-cyan-500/30 text-slate-100 font-medium">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-cyan-500/30">
@@ -192,7 +192,7 @@ export default function AdminPanel() {
           <div>
             <label className="block text-sm font-semibold text-cyan-300 mb-2">Filtrar por Estado</label>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="bg-slate-800 border-cyan-500/30 text-slate-200 font-normal">
+              <SelectTrigger className="bg-slate-800 border-cyan-500/30 text-slate-100 font-medium">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-cyan-500/30">
@@ -254,7 +254,7 @@ export default function AdminPanel() {
                       updateStatusMutation.mutate({ orderId: order.id, status: newStatus })
                     }
                   >
-                    <SelectTrigger className="bg-slate-700 border-cyan-500/30 text-slate-200 font-normal flex-1">
+                    <SelectTrigger className="bg-slate-700 border-cyan-500/30 text-slate-100 font-medium flex-1">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-800 border-cyan-500/30">
