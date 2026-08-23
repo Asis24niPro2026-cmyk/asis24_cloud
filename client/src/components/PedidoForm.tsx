@@ -186,6 +186,10 @@ export default function PedidoForm() {
               </Button>
             </form>
           </Card>
+
+          <p className="text-center text-slate-400 text-xs mt-6">
+            © ASIS24-NICARAGUA EVEBOT {new Date().getFullYear()}
+          </p>
         </div>
       </div>
     </div>

@@ -281,6 +281,10 @@ export default function AdminPanel() {
             ))
           )}
         </div>
+
+        <p className="text-center text-slate-400 text-xs mt-10 pb-4">
+          © ASIS24-NICARAGUA EVEBOT {new Date().getFullYear()}
+        </p>
       </div>
     </div>
   );
