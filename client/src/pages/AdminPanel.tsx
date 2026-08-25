@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { Loader2, LogOut, Trash2, Eye, EyeOff } from "lucide-react";
+import { Loader2, LogOut, Trash2, Eye, EyeOff, MessageCircle } from "lucide-react";
 
 export default function AdminPanel() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -244,7 +244,7 @@ export default function AdminPanel() {
 
                 <div className="mb-4">
                   <p className="text-cyan-300 text-sm font-semibold">Dirección</p>
-                  <p className="text-white">{order.address}</p>
+                  <p className="text-white">{order.deliveryAddress || "—"}</p>
                 </div>
 
                 <div className="flex flex-col md:flex-row gap-2">
@@ -263,6 +263,28 @@ export default function AdminPanel() {
                       <SelectItem value="Entregado">Entregado</SelectItem>
                     </SelectContent>
                   </Select>
+
+                  <Button
+                    onClick={() => {
+                      const mensaje =
+                        `*Nuevo pedido ASIS24*\n\n` +
+                        `Cliente: ${order.clientName}\n` +
+                        `Teléfono: ${order.phone}\n` +
+                        `Negocio: ${order.business}\n` +
+                        `Pedido: ${order.details}\n` +
+                        `Entrega: ${order.deliveryType}` +
+                        (order.deliveryType === "Delivery" && order.deliveryAddress
+                          ? `\nDirección: ${order.deliveryAddress}`
+                          : "") +
+                        `\nEstado: ${order.status}`;
+                      const url = `https://wa.me/50583629444?text=${encodeURIComponent(mensaje)}`;
+                      window.open(url, "_blank");
+                    }}
+                    className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2"
+                  >
+                    <MessageCircle size={18} />
+                    Enviar por WhatsApp
+                  </Button>
 
                   <Button
                     onClick={() => deleteOrderMutation.mutate({ orderId: order.id })}
