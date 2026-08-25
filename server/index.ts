@@ -8,7 +8,7 @@ const app = express();
 
 // ✅ Configuración CORS
 const allowedOrigins = [
-  "https://asis24-client.onrender.com",
+  "https://asis24-nic.onrender.com",
   process.env.CORS_ORIGIN, // dominio local (Codespaces) para desarrollo
 ].filter(Boolean);
 
