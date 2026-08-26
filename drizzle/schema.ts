@@ -20,11 +20,23 @@ export const businessEnum = pgEnum("business", ["Comidería", "Papelería", "Rop
 export const deliveryTypeEnum = pgEnum("deliveryType", ["Local", "Delivery"]);
 export const statusEnum = pgEnum("status", ["Pendiente", "Enviado al negocio", "Entregado"]);
 
+// Negocios específicos (ej. "Comedor Martha", "Variedades Daysy"), agrupados por categoría (businessEnum)
+export const businesses = pgTable("businesses", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  category: businessEnum("category").notNull(),
+  whatsappNumber: varchar("whatsappNumber", { length: 20 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+export type Business = typeof businesses.$inferSelect;
+export type InsertBusiness = typeof businesses.$inferInsert;
+
 export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
   clientName: varchar("clientName", { length: 255 }).notNull(),
   phone: varchar("phone", { length: 20 }).notNull(),
-  business: businessEnum("business").notNull(),
+  businessId: integer("businessId").notNull().references(() => businesses.id),
   details: text("details").notNull(),
   deliveryType: deliveryTypeEnum("deliveryType").notNull(),
   deliveryAddress: varchar("deliveryAddress", { length: 500 }),

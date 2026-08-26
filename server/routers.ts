@@ -1,6 +1,6 @@
 import { initTRPC, TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { getOrders, createOrder, updateOrderStatus, deleteOrder } from './db';
+import { getOrders, createOrder, updateOrderStatus, deleteOrder, getBusinesses, createBusiness, updateBusiness, deleteBusiness } from './db';
 import { authenticateAdmin } from './auth-admin';
 
 const t = initTRPC.create();
@@ -45,11 +45,56 @@ export const appRouter = t.router({
       return `Hola ${input ?? 'mundo'} desde tRPC!`;
     }),
 
+  businesses: t.router({
+    list: t.procedure
+      .input(
+        z.object({
+          category: z.enum(businessValues).optional(),
+        }).optional()
+      )
+      .query(async ({ input }) => {
+        return await getBusinesses(input);
+      }),
+
+    create: t.procedure
+      .input(
+        z.object({
+          name: z.string().min(1),
+          category: z.enum(businessValues),
+          whatsappNumber: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        return await createBusiness(input);
+      }),
+
+    update: t.procedure
+      .input(
+        z.object({
+          businessId: z.number(),
+          name: z.string().min(1).optional(),
+          category: z.enum(businessValues).optional(),
+          whatsappNumber: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { businessId, ...updates } = input;
+        return await updateBusiness(businessId, updates);
+      }),
+
+    delete: t.procedure
+      .input(z.object({ businessId: z.number() }))
+      .mutation(async ({ input }) => {
+        return await deleteBusiness(input.businessId);
+      }),
+  }),
+
   orders: t.router({
     list: t.procedure
       .input(
         z.object({
-          business: z.enum(businessValues).optional(),
+          businessId: z.number().optional(),
+          category: z.enum(businessValues).optional(),
           status: z.enum(statusValues).optional(),
         }).optional()
       )
@@ -62,7 +107,7 @@ export const appRouter = t.router({
         z.object({
           clientName: z.string().min(1),
           phone: z.string().min(1),
-          business: z.enum(businessValues),
+          businessId: z.number(),
           details: z.string().min(1),
           deliveryType: z.enum(deliveryTypeValues),
           deliveryAddress: z.string().optional(),

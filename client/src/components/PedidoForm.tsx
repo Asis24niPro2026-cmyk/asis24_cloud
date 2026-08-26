@@ -25,17 +25,21 @@ const DELIVERY_OPTIONS = ["Local", "Delivery"] as const;
 export default function PedidoForm() {
   const [clientName, setClientName] = useState("");
   const [phone, setPhone] = useState("");
-  const [business, setBusiness] = useState<(typeof BUSINESS_OPTIONS)[number]>(BUSINESS_OPTIONS[0]);
+  const [category, setCategory] = useState<(typeof BUSINESS_OPTIONS)[number]>(BUSINESS_OPTIONS[0]);
+  const [businessId, setBusinessId] = useState<string>("");
   const [details, setDetails] = useState("");
   const [deliveryType, setDeliveryType] = useState<(typeof DELIVERY_OPTIONS)[number]>("Local");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
 
+  const businessesQuery = trpc.businesses.list.useQuery({ category });
+
   const crearPedido = trpc.orders.create.useMutation({
     onSuccess: () => {
       setClientName("");
       setPhone("");
-      setBusiness(BUSINESS_OPTIONS[0]);
+      setCategory(BUSINESS_OPTIONS[0]);
+      setBusinessId("");
       setDetails("");
       setDeliveryType("Local");
       setDeliveryAddress("");
@@ -46,11 +50,12 @@ export default function PedidoForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!businessId) return;
 
     crearPedido.mutate({
       clientName,
       phone,
-      business,
+      businessId: Number(businessId),
       details,
       deliveryType,
       deliveryAddress: deliveryType === "Delivery" ? deliveryAddress : "",
@@ -111,8 +116,14 @@ export default function PedidoForm() {
               </div>
 
               <div>
-                <Label className="text-sm font-semibold text-cyan-300 mb-2">Negocio</Label>
-                <Select value={business} onValueChange={(v) => setBusiness(v as typeof business)}>
+                <Label className="text-sm font-semibold text-cyan-300 mb-2">Categoría</Label>
+                <Select
+                  value={category}
+                  onValueChange={(v) => {
+                    setCategory(v as typeof category);
+                    setBusinessId("");
+                  }}
+                >
                   <SelectTrigger className="bg-slate-700/50 border-cyan-500/30 text-slate-100 font-medium mt-2 w-full">
                     <SelectValue />
                   </SelectTrigger>
@@ -124,6 +135,30 @@ export default function PedidoForm() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div>
+                <Label className="text-sm font-semibold text-cyan-300 mb-2">Negocio</Label>
+                {businessesQuery.isLoading ? (
+                  <p className="text-slate-400 text-sm mt-2">Cargando negocios...</p>
+                ) : businessesQuery.data?.length === 0 ? (
+                  <p className="text-slate-400 text-sm mt-2">
+                    Todavía no hay negocios registrados en esta categoría
+                  </p>
+                ) : (
+                  <Select value={businessId} onValueChange={setBusinessId}>
+                    <SelectTrigger className="bg-slate-700/50 border-cyan-500/30 text-slate-100 font-medium mt-2 w-full">
+                      <SelectValue placeholder="Selecciona un negocio" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-cyan-500/30">
+                      {businessesQuery.data?.map((b: any) => (
+                        <SelectItem key={b.id} value={String(b.id)}>
+                          {b.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               <div>
@@ -169,7 +204,7 @@ export default function PedidoForm() {
 
               <Button
                 type="submit"
-                disabled={crearPedido.isPending}
+                disabled={crearPedido.isPending || !businessId}
                 className="w-full bg-gradient-to-r from-cyan-500 to-orange-500 hover:from-cyan-600 hover:to-orange-600 text-white font-bold py-3 rounded-lg transition-all duration-300 mt-6"
               >
                 {crearPedido.isPending ? (

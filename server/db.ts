@@ -1,7 +1,7 @@
 import { and, desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import { InsertUser, users, orders, InsertOrder } from "../drizzle/schema";
+import { InsertUser, users, orders, InsertOrder, businesses, InsertBusiness } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -94,9 +94,99 @@ export async function getUserByOpenId(openId: string) {
 }
 
 /**
- * Get all orders with optional filtering
+ * Get all businesses with optional filtering by category
  */
-export async function getOrders(filters?: { business?: string; status?: string }) {
+export async function getBusinesses(filters?: { category?: string }) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get businesses: database not available");
+    return [];
+  }
+
+  try {
+    const conditions = [];
+
+    if (filters?.category && filters.category !== "all") {
+      conditions.push(eq(businesses.category, filters.category as any));
+    }
+
+    const query = conditions.length > 0
+      ? db.select().from(businesses).where(and(...conditions))
+      : db.select().from(businesses);
+
+    const result = await query.orderBy(businesses.name);
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get businesses:", error);
+    throw error;
+  }
+}
+
+/**
+ * Create a new business
+ */
+export async function createBusiness(business: InsertBusiness) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot create business: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db.insert(businesses).values(business).returning();
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to create business:", error);
+    throw error;
+  }
+}
+
+/**
+ * Update an existing business
+ */
+export async function updateBusiness(businessId: number, updates: Partial<InsertBusiness>) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot update business: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db
+      .update(businesses)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(businesses.id, businessId))
+      .returning();
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to update business:", error);
+    throw error;
+  }
+}
+
+/**
+ * Delete a business
+ */
+export async function deleteBusiness(businessId: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot delete business: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db.delete(businesses).where(eq(businesses.id, businessId)).returning();
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to delete business:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get all orders with optional filtering. Incluye los datos del negocio (join).
+ */
+export async function getOrders(filters?: { businessId?: number; category?: string; status?: string }) {
   const db = await getDb();
   if (!db) {
     console.warn("[Database] Cannot get orders: database not available");
@@ -106,17 +196,38 @@ export async function getOrders(filters?: { business?: string; status?: string }
   try {
     const conditions = [];
 
-    if (filters?.business && filters.business !== "all") {
-      conditions.push(eq(orders.business, filters.business as any));
+    if (filters?.businessId) {
+      conditions.push(eq(orders.businessId, filters.businessId));
+    }
+
+    if (filters?.category && filters.category !== "all") {
+      conditions.push(eq(businesses.category, filters.category as any));
     }
 
     if (filters?.status && filters.status !== "all") {
       conditions.push(eq(orders.status, filters.status as any));
     }
 
-    const query = conditions.length > 0
-      ? db.select().from(orders).where(and(...conditions))
-      : db.select().from(orders);
+    const baseQuery = db
+      .select({
+        id: orders.id,
+        clientName: orders.clientName,
+        phone: orders.phone,
+        businessId: orders.businessId,
+        businessName: businesses.name,
+        businessCategory: businesses.category,
+        businessWhatsapp: businesses.whatsappNumber,
+        details: orders.details,
+        deliveryType: orders.deliveryType,
+        deliveryAddress: orders.deliveryAddress,
+        status: orders.status,
+        createdAt: orders.createdAt,
+        updatedAt: orders.updatedAt,
+      })
+      .from(orders)
+      .leftJoin(businesses, eq(orders.businessId, businesses.id));
+
+    const query = conditions.length > 0 ? baseQuery.where(and(...conditions)) : baseQuery;
 
     const result = await query.orderBy(desc(orders.createdAt));
     return result;
