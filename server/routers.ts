@@ -1,4 +1,4 @@
-import { initTRPC, TRPCError } from '@trpc/server';
+fimport { initTRPC, TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { getOrders, createOrder, updateOrderStatus, deleteOrder, getBusinesses, createBusiness, updateBusiness, deleteBusiness } from './db';
 import { authenticateAdmin } from './auth-admin';
@@ -7,7 +7,8 @@ const t = initTRPC.create();
 
 const businessValues = [
   "Comidería", "Papelería", "Ropa", "Celulares", "Masajes",
-  "Uñas Acrílicas", "Variedades", "Examen/Laboratorio", "Otros",
+  "Uñas Acrílicas", "Variedades", "Examen/Laboratorio", "Barbería",
+  "Artículos de Segunda", "Otros",
 ] as const;
 
 const deliveryTypeValues = ["Local", "Delivery"] as const;
