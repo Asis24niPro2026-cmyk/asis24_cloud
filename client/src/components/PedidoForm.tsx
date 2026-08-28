@@ -16,7 +16,9 @@ const BUSINESS_OPTIONS = [
   "Masajes",
   "Uñas Acrílicas",
   "Variedades",
-  "Examen/Laboratorio",
+    "Examen/Laboratorio",
+  "Barbería",
+  "Artículos de Segunda",
   "Otros",
 ] as const;
 
