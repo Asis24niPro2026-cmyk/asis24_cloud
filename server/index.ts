@@ -49,6 +49,17 @@ app.use(
   "/api/trpc",
   trpcExpress.createExpressMiddleware({
     router: appRouter,
+    createContext: ({ req }) => {
+      const authHeader = req.headers.authorization;
+      const token = authHeader?.startsWith("Bearer ")
+        ? authHeader.slice(7)
+        : undefined;
+      const ip =
+        (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
+        req.socket.remoteAddress ||
+        "unknown";
+      return { token, ip };
+    },
   })
 );
 // 🚀 Inicializar servidor

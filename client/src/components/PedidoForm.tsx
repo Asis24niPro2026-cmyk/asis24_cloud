@@ -100,6 +100,7 @@ export default function PedidoForm() {
                   value={clientName}
                   onChange={(e) => setClientName(e.target.value)}
                   required
+                  maxLength={150}
                   className="bg-slate-700/50 border-cyan-500/30 text-white placeholder-slate-400 mt-2"
                   placeholder="Tu nombre"
                 />
@@ -112,6 +113,7 @@ export default function PedidoForm() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   required
+                  maxLength={30}
                   className="bg-slate-700/50 border-cyan-500/30 text-white placeholder-slate-400 mt-2"
                   placeholder="Número de contacto"
                 />
@@ -169,6 +171,7 @@ export default function PedidoForm() {
                   value={details}
                   onChange={(e) => setDetails(e.target.value)}
                   required
+                  maxLength={1000}
                   className="bg-slate-700/50 border-cyan-500/30 text-white placeholder-slate-400 mt-2"
                   placeholder="¿Qué necesitas?"
                 />
@@ -198,6 +201,7 @@ export default function PedidoForm() {
                     value={deliveryAddress}
                     onChange={(e) => setDeliveryAddress(e.target.value)}
                     required
+                    maxLength={300}
                     className="bg-slate-700/50 border-cyan-500/30 text-white placeholder-slate-400 mt-2"
                     placeholder="¿A dónde lo enviamos?"
                   />

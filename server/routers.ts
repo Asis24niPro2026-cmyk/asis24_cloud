@@ -2,8 +2,28 @@ import { initTRPC, TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { getOrders, createOrder, updateOrderStatus, deleteOrder, getBusinesses, createBusiness, updateBusiness, deleteBusiness } from './db';
 import { authenticateAdmin } from './auth-admin';
+import { createSession, validateSession, destroySession } from './session';
+import { isLocked, msUntilUnlocked, recordFailedAttempt, recordSuccess } from './login-rate-limit';
 
-const t = initTRPC.create();
+interface Context {
+  token?: string;
+  ip: string;
+}
+
+const t = initTRPC.context<Context>().create();
+
+// Middleware: exige un token de sesión válido (emitido en admin.login)
+const isAuthed = t.middleware(({ ctx, next }) => {
+  if (!validateSession(ctx.token)) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Sesión inválida o expirada. Vuelve a iniciar sesión.",
+    });
+  }
+  return next();
+});
+
+const protectedProcedure = t.procedure.use(isAuthed);
 
 const businessValues = [
   "Comidería", "Papelería", "Ropa", "Celulares", "Masajes",
@@ -20,22 +40,37 @@ export const appRouter = t.router({
     login: t.procedure
       .input(
         z.object({
-          username: z.string().min(1),
-          password: z.string().min(1),
+          username: z.string().min(1).max(100),
+          password: z.string().min(1).max(200),
         })
       )
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
+        const rateLimitKey = ctx.ip;
+
+        if (isLocked(rateLimitKey)) {
+          const minutes = Math.ceil(msUntilUnlocked(rateLimitKey) / 60000);
+          throw new TRPCError({
+            code: "TOO_MANY_REQUESTS",
+            message: `Demasiados intentos fallidos. Intenta de nuevo en ${minutes} minuto(s).`,
+          });
+        }
+
         const isValid = await authenticateAdmin(input.username, input.password);
         if (!isValid) {
+          recordFailedAttempt(rateLimitKey);
           throw new TRPCError({
             code: "UNAUTHORIZED",
             message: "Usuario o contraseña incorrectos",
           });
         }
-        return { success: true };
+
+        recordSuccess(rateLimitKey);
+        const token = createSession(input.username);
+        return { success: true, token };
       }),
 
-    logout: t.procedure.mutation(async () => {
+    logout: protectedProcedure.mutation(async ({ ctx }) => {
+      destroySession(ctx.token);
       return { success: true };
     }),
   }),
@@ -47,6 +82,7 @@ export const appRouter = t.router({
     }),
 
   businesses: t.router({
+    // Público: el formulario de clientes necesita listar negocios por categoría
     list: t.procedure
       .input(
         z.object({
@@ -57,25 +93,25 @@ export const appRouter = t.router({
         return await getBusinesses(input);
       }),
 
-    create: t.procedure
+    create: protectedProcedure
       .input(
         z.object({
-          name: z.string().min(1),
+          name: z.string().min(1).max(150),
           category: z.enum(businessValues),
-          whatsappNumber: z.string().optional(),
+          whatsappNumber: z.string().max(30).optional(),
         })
       )
       .mutation(async ({ input }) => {
         return await createBusiness(input);
       }),
 
-    update: t.procedure
+    update: protectedProcedure
       .input(
         z.object({
           businessId: z.number(),
-          name: z.string().min(1).optional(),
+          name: z.string().min(1).max(150).optional(),
           category: z.enum(businessValues).optional(),
-          whatsappNumber: z.string().optional(),
+          whatsappNumber: z.string().max(30).optional(),
         })
       )
       .mutation(async ({ input }) => {
@@ -83,7 +119,7 @@ export const appRouter = t.router({
         return await updateBusiness(businessId, updates);
       }),
 
-    delete: t.procedure
+    delete: protectedProcedure
       .input(z.object({ businessId: z.number() }))
       .mutation(async ({ input }) => {
         return await deleteBusiness(input.businessId);
@@ -91,7 +127,8 @@ export const appRouter = t.router({
   }),
 
   orders: t.router({
-    list: t.procedure
+    // Protegido: la lista de pedidos expone datos de clientes (nombre, teléfono, dirección)
+    list: protectedProcedure
       .input(
         z.object({
           businessId: z.number().optional(),
@@ -103,15 +140,16 @@ export const appRouter = t.router({
         return await getOrders(input);
       }),
 
+    // Público: el formulario de clientes crea pedidos sin necesitar login
     create: t.procedure
       .input(
         z.object({
-          clientName: z.string().min(1),
-          phone: z.string().min(1),
+          clientName: z.string().min(1).max(150),
+          phone: z.string().min(1).max(30),
           businessId: z.number(),
-          details: z.string().min(1),
+          details: z.string().min(1).max(1000),
           deliveryType: z.enum(deliveryTypeValues),
-          deliveryAddress: z.string().optional(),
+          deliveryAddress: z.string().max(300).optional(),
         }).refine(
           (data) =>
             data.deliveryType !== "Delivery" ||
@@ -126,7 +164,7 @@ export const appRouter = t.router({
         return await createOrder(input);
       }),
 
-    updateStatus: t.procedure
+    updateStatus: protectedProcedure
       .input(
         z.object({
           orderId: z.number(),
@@ -137,7 +175,7 @@ export const appRouter = t.router({
         return await updateOrderStatus(input.orderId, input.status);
       }),
 
-    delete: t.procedure
+    delete: protectedProcedure
       .input(z.object({ orderId: z.number() }))
       .mutation(async ({ input }) => {
         return await deleteOrder(input.orderId);

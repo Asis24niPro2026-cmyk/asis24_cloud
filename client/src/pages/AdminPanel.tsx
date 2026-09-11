@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { setAuthToken } from "@/lib/auth-token";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -32,7 +33,8 @@ export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState<"orders" | "businesses">("orders");
 
   const loginMutation = trpc.admin.login.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
+      setAuthToken(data.token);
       setIsLoggedIn(true);
       setUsername("");
       setPassword("");
@@ -45,12 +47,25 @@ export default function AdminPanel() {
 
   const logoutMutation = trpc.admin.logout.useMutation({
     onSuccess: () => {
+      setAuthToken(null);
       setIsLoggedIn(false);
       setUsername("");
       setPassword("");
       setLoginError("");
     },
+    onError: () => {
+      // Aunque falle en el servidor (ej. sesión ya vencida), igual limpiamos localmente
+      setAuthToken(null);
+      setIsLoggedIn(false);
+    },
   });
+
+  // Si cualquier llamada protegida devuelve "sesión expirada", regresamos al login
+  const handleSessionExpired = () => {
+    setAuthToken(null);
+    setIsLoggedIn(false);
+    setLoginError("Tu sesión expiró. Vuelve a iniciar sesión.");
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -191,7 +206,11 @@ export default function AdminPanel() {
           </button>
         </div>
 
-        {activeTab === "orders" ? <OrdersTab /> : <BusinessesTab />}
+        {activeTab === "orders" ? (
+          <OrdersTab onSessionExpired={handleSessionExpired} />
+        ) : (
+          <BusinessesTab onSessionExpired={handleSessionExpired} />
+        )}
 
         <p className="text-center text-slate-400 text-xs mt-10 pb-4">
           © ASIS24-NICARAGUA EVEBOT {new Date().getFullYear()}
@@ -201,7 +220,7 @@ export default function AdminPanel() {
   );
 }
 
-function OrdersTab() {
+function OrdersTab({ onSessionExpired }: { onSessionExpired: () => void }) {
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterBusinessId, setFilterBusinessId] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -210,18 +229,31 @@ function OrdersTab() {
     filterCategory === "all" ? undefined : { category: filterCategory as any }
   );
 
-  const ordersQuery = trpc.orders.list.useQuery({
-    category: filterCategory === "all" ? undefined : (filterCategory as any),
-    businessId: filterBusinessId === "all" ? undefined : Number(filterBusinessId),
-    status: filterStatus === "all" ? undefined : (filterStatus as any),
-  });
+  const ordersQuery = trpc.orders.list.useQuery(
+    {
+      category: filterCategory === "all" ? undefined : (filterCategory as any),
+      businessId: filterBusinessId === "all" ? undefined : Number(filterBusinessId),
+      status: filterStatus === "all" ? undefined : (filterStatus as any),
+    },
+    {
+      onError: (error) => {
+        if (error.data?.code === "UNAUTHORIZED") onSessionExpired();
+      },
+    }
+  );
 
   const deleteOrderMutation = trpc.orders.delete.useMutation({
     onSuccess: () => ordersQuery.refetch(),
+    onError: (error) => {
+      if (error.data?.code === "UNAUTHORIZED") onSessionExpired();
+    },
   });
 
   const updateStatusMutation = trpc.orders.updateStatus.useMutation({
     onSuccess: () => ordersQuery.refetch(),
+    onError: (error) => {
+      if (error.data?.code === "UNAUTHORIZED") onSessionExpired();
+    },
   });
 
   return (
@@ -395,7 +427,7 @@ function OrdersTab() {
   );
 }
 
-function BusinessesTab() {
+function BusinessesTab({ onSessionExpired }: { onSessionExpired: () => void }) {
   const [filterCategory, setFilterCategory] = useState("all");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -415,11 +447,16 @@ function BusinessesTab() {
     setWhatsappNumber("");
   };
 
+  const handleAuthError = (error: any) => {
+    if (error.data?.code === "UNAUTHORIZED") onSessionExpired();
+  };
+
   const createMutation = trpc.businesses.create.useMutation({
     onSuccess: () => {
       businessesQuery.refetch();
       resetForm();
     },
+    onError: handleAuthError,
   });
 
   const updateMutation = trpc.businesses.update.useMutation({
@@ -427,10 +464,12 @@ function BusinessesTab() {
       businessesQuery.refetch();
       resetForm();
     },
+    onError: handleAuthError,
   });
 
   const deleteMutation = trpc.businesses.delete.useMutation({
     onSuccess: () => businessesQuery.refetch(),
+    onError: handleAuthError,
   });
 
   const startEdit = (b: any) => {

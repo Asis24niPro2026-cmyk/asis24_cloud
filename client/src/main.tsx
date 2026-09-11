@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import App from "./App";
 import { trpc } from "./lib/trpc";
+import { getAuthToken } from "./lib/auth-token";
 
 // Importa el tipo de tu router del backend
 import type { AppRouter } from "../server/router";
@@ -17,6 +18,10 @@ const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
       url: `${import.meta.env.VITE_API_URL || "https://asis24-cloud-1.onrender.com"}/api/trpc`, // ajusta la URL si tu backend expone otra ruta
+      headers() {
+        const token = getAuthToken();
+        return token ? { Authorization: `Bearer ${token}` } : {};
+      },
     }),
   ],
 });
