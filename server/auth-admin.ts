@@ -16,11 +16,9 @@ export async function hashPassword(password: string): Promise<string> {
  */
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
   try {
-    const result = await bcryptjs.compare(password, hash);
-    console.log(`[Auth] Password verification: ${result ? "SUCCESS" : "FAILED"}`);
-    return result;
+    return await bcryptjs.compare(password, hash);
   } catch (error) {
-    console.error("[Auth] Error during password verification:", error);
+    console.error("[Auth] Error during password verification");
     return false;
   }
 }
@@ -36,31 +34,24 @@ export async function authenticateAdmin(username: string, password: string): Pro
   }
 
   try {
-    console.log(`[Auth] Attempting to authenticate user: ${username}`);
-    
     const result = await db
       .select()
       .from(adminUsers)
       .where(eq(adminUsers.username, username))
       .limit(1);
 
-    console.log(`[Auth] Query result: ${result.length} user(s) found`);
-
     if (result.length === 0) {
-      console.warn(`[Auth] User not found: ${username}`);
+      console.warn("[Auth] Login attempt failed");
       return false;
     }
 
     const admin = result[0];
-    console.log(`[Auth] User found. Verifying password...`);
-    console.log(`[Auth] Stored hash length: ${admin.passwordHash.length}`);
-    
     const isValid = await verifyPassword(password, admin.passwordHash);
-    console.log(`[Auth] Authentication result: ${isValid ? "SUCCESS" : "FAILED"}`);
-    
+    console.log(`[Auth] Login attempt: ${isValid ? "SUCCESS" : "FAILED"}`);
+
     return isValid;
   } catch (error) {
-    console.error("[Auth] Failed to authenticate admin:", error);
+    console.error("[Auth] Failed to authenticate admin");
     return false;
   }
 }
@@ -77,7 +68,6 @@ export async function setAdminCredentials(username: string, password: string): P
 
   try {
     const passwordHash = await hashPassword(password);
-    console.log(`[Auth] Generated hash for user ${username}: ${passwordHash}`);
 
     // Check if admin exists
     const existing = await db
