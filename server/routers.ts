@@ -4,6 +4,10 @@ import { getOrders, createOrder, updateOrderStatus, deleteOrder, getBusinesses, 
 import { authenticateAdmin } from './auth-admin';
 import { createSession, validateSession, destroySession } from './session';
 import { isLocked, msUntilUnlocked, recordFailedAttempt, recordSuccess } from './login-rate-limit';
+import { createRateLimiter } from './rate-limit';
+
+// Máximo 5 pedidos cada 10 minutos por IP, para evitar spam al formulario público
+const orderRateLimiter = createRateLimiter(5, 10 * 60 * 1000);
 
 interface Context {
   token?: string;
@@ -160,7 +164,15 @@ export const appRouter = t.router({
           }
         )
       )
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
+        if (orderRateLimiter.isRateLimited(ctx.ip)) {
+          const minutes = Math.ceil(orderRateLimiter.msUntilReset(ctx.ip) / 60000);
+          throw new TRPCError({
+            code: "TOO_MANY_REQUESTS",
+            message: `Has enviado demasiados pedidos. Intenta de nuevo en ${minutes} minuto(s).`,
+          });
+        }
+        orderRateLimiter.recordAction(ctx.ip);
         return await createOrder(input);
       }),
 
